@@ -44,7 +44,7 @@ function reset() {
 }
 
 function saveActivity() {
-    const militar = document.getElementById('Militar').value;
+    const pessoas = document.getElementById('Pessoa').value;
     const atividade = document.getElementById('atividade').value;
     const tempo = document.getElementById('display').innerText;
     const data = new Date().toLocaleDateString('pt-BR');
@@ -64,7 +64,7 @@ function addTableRow(registro) {
     const row = tbody.insertRow(0);
     row.innerHTML = `
         <td>${registro.data}</td>
-        <td>${registro.militar}</td>
+        <td>${registro.pessoas}</td>
         <td>${registro.atividade}</td>
         <td>${registro.tempo}</td>
     `;
@@ -93,11 +93,11 @@ function downloadHistory() {
     }
 
     // Cabeçalho do CSV
-    let csv = "Data;Militar;Atividade;Tempo\n";
+    let csv = "Data;Pessoas;Atividade;Tempo\n";
 
     // Conteúdo
     historico.forEach(registro => {
-        csv += `${registro.data};${registro.militar};${registro.atividade};${registro.tempo}\n`;
+        csv += `${registro.data};${registro.pessoas};${registro.atividade};${registro.tempo}\n`;
     });
 
     // Cria o arquivo

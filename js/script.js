@@ -49,7 +49,7 @@ function saveActivity() {
     const tempo = document.getElementById('display').innerText;
     const data = new Date().toLocaleDateString('pt-BR');
 
-    const registro = { data, militar, atividade, tempo };
+    const registro = { data, pessoas, atividade, tempo };
 
     let historico = JSON.parse(localStorage.getItem('atividades_2026')) || [];
     historico.push(registro);

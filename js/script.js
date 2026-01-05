@@ -1,53 +1,86 @@
-let timer;
-let seconds = 0;
+
+let timer = null;
+let startTime = null;
+let elapsed = 0;
 let isRunning = false;
 
-// Carregar dados ao abrir a página
-window.onload = loadHistory;
+// ===============================
+// AO ABRIR A PÁGINA
+// ===============================
+window.onload = () => {
+    loadHistory();
+    document.getElementById('display').innerText = "00:00:00";
+};
 
-function updateDisplay() {
-    let hrs = Math.floor(seconds / 3600);
-    let mins = Math.floor((seconds % 3600) / 60);
-    let secs = seconds % 60;
+// ===============================
+// ATUALIZA DISPLAY
+// ===============================
+function updateTimer() {
+    elapsed = Date.now() - startTime;
+
+    let totalSeconds = Math.floor(elapsed / 1000);
+    let hrs = Math.floor(totalSeconds / 3600);
+    let mins = Math.floor((totalSeconds % 3600) / 60);
+    let secs = totalSeconds % 60;
+
     document.getElementById('display').innerText =
         `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-
-
+// ===============================
+// START
+// ===============================
 function start() {
-    if (!isRunning) {
-        isRunning = true;
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('pauseBtn').disabled = false;
-        document.getElementById('saveBtn').disabled = true;
-        timer = setInterval(() => { 
-            seconds++; 
-            updateDisplay(); 
-        }, 1000);
-    }
+    if (isRunning) return;
+
+    isRunning = true;
+
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('pauseBtn').disabled = false;
+    document.getElementById('saveBtn').disabled = true;
+
+    startTime = Date.now() - elapsed;
+    timer = setInterval(updateTimer, 1000);
 }
 
+// ===============================
+// PAUSE
+// ===============================
 function pause() {
+    if (!isRunning) return;
+
     isRunning = false;
+    clearInterval(timer);
+
     document.getElementById('startBtn').disabled = false;
     document.getElementById('pauseBtn').disabled = true;
-    document.getElementById('saveBtn').disabled = (seconds === 0);
-    clearInterval(timer);
+    document.getElementById('saveBtn').disabled = (elapsed === 0);
 }
 
+// ===============================
+// RESET
+// ===============================
 function reset() {
     pause();
-    seconds = 0;
-    updateDisplay();
+    elapsed = 0;
+    startTime = null;
+    document.getElementById('display').innerText = "00:00:00";
     document.getElementById('saveBtn').disabled = true;
 }
 
+// ===============================
+// SALVAR ATIVIDADE
+// ===============================
 function saveActivity() {
     const pessoas = document.getElementById('Pessoa').value;
     const atividade = document.getElementById('atividade').value;
     const tempo = document.getElementById('display').innerText;
     const data = new Date().toLocaleDateString('pt-BR');
+
+    if (!pessoas || !atividade || tempo === "00:00:00") {
+        alert("Preencha todos os campos antes de salvar.");
+        return;
+    }
 
     const registro = { data, pessoas, atividade, tempo };
 
@@ -59,9 +92,13 @@ function saveActivity() {
     reset();
 }
 
+// ===============================
+// ADICIONA LINHA NA TABELA
+// ===============================
 function addTableRow(registro) {
     const tbody = document.getElementById('historyBody');
     const row = tbody.insertRow(0);
+
     row.innerHTML = `
         <td>${registro.data}</td>
         <td>${registro.pessoas}</td>
@@ -70,20 +107,28 @@ function addTableRow(registro) {
     `;
 }
 
+// ===============================
+// CARREGA HISTÓRICO
+// ===============================
 function loadHistory() {
     let historico = JSON.parse(localStorage.getItem('atividades_2026')) || [];
-    // Limpa a tabela antes de carregar (evita duplicatas)
     document.getElementById('historyBody').innerHTML = "";
     historico.reverse().forEach(addTableRow);
 }
 
+// ===============================
+// LIMPAR HISTÓRICO
+// ===============================
 function clearHistory() {
-    if(confirm("Deseja apagar todo o histórico?")) {
+    if (confirm("Deseja apagar todo o histórico?")) {
         localStorage.removeItem('atividades_2026');
         document.getElementById('historyBody').innerHTML = "";
     }
 }
 
+// ===============================
+// DOWNLOAD CSV
+// ===============================
 function downloadHistory() {
     let historico = JSON.parse(localStorage.getItem('atividades_2026')) || [];
 
@@ -92,26 +137,21 @@ function downloadHistory() {
         return;
     }
 
-    // Cabeçalho do CSV
     let csv = "Data;Pessoas;Atividade;Tempo\n";
 
-    // Conteúdo
     historico.forEach(registro => {
         csv += `${registro.data};${registro.pessoas};${registro.atividade};${registro.tempo}\n`;
     });
 
-    // Cria o arquivo
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
-    // Cria link de download
     const a = document.createElement("a");
     a.href = url;
     a.download = "historico_atividades_2026.csv";
     document.body.appendChild(a);
     a.click();
 
-    // Limpeza
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
